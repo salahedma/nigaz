@@ -1,0 +1,409 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Models.Model
+@inject UserManager<User> userManager
+@model Catigory
+
+@{
+    ViewData["Title"] = "Details";
+    var currentUser = await userManager.GetUserAsync(User);
+    var userId = await userManager.GetUserIdAsync(currentUser);
+    var CatigoryId = Model.Id;
+    string str="";
+    foreach (var ee in Model.seats)
+    {
+        str += ee.Index_Seats;
+        str += ",";
+    }
+}
+
+<div class="container">
+    <h1>تفاصيل الفئة</h1>
+
+    <div class="details">
+        <div class="row">
+            <dt>اسم الفئة:</dt>
+            <dd>@Html.DisplayFor(model => model.NameCatigory)</dd>
+        </div>
+       
+        <div class="row">
+            <dt>الحافلات:</dt>
+            <dd>@Html.DisplayFor(model => model.Seats)</dd>
+        </div>
+    </div>
+
+    <div class="bus-container">
+        <div class="bus">
+            <div class="windshield"></div>
+            <div class="door"></div>
+            <div class="seats-container" id="buss">
+            </div>
+            <div class="wheels">
+                <div class="wheel"></div>
+                <div class="wheel"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-edit">تعديل</a>
+        <a asp-action="Index" class="btn btn-back">العودة إلى القائمة</a>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+<script>
+    const totalSeats = @Model.Seats;
+    const CategoryId = "@CatigoryId";
+    let str="@str";
+    let arr=str.split(",");
+    for (var i = 0; i < arr.length; i++) {
+        console.log(arr[i] + " asd");
+    }
+
+
+    const seatsContainer = document.getElementById('buss');
+
+    const userId = "@userId";
+
+    console.log("UserId:", userId);
+    console.log("Total Seats:", totalSeats);
+
+    for (let i = 1; i <= totalSeats; i++) {
+        const seat = document.createElement('button');
+        seat.className = 'seat';
+        seat.setAttribute('data-seat', i);
+        seat.textContent = i;
+        seatsContainer.appendChild(seat);
+    }
+    
+
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/busHub")
+        .build();
+
+    connection.on("SeatReserved", (seatNumber, reservedBy,CategoryId) => {
+        const btn = document.querySelector(`button[data-seat="${seatNumber}"]`);
+        if (btn) {
+            btn.classList.add("reserved");
+            btn.disabled = true;
+            
+        }
+        
+        console.log(`Seat ${seatNumber} reserved by ${reservedBy}`);
+    });
+    window.onload = function () {
+          for (let z = 0; z < arr.length; z++) {
+              const seatNumber = arr[z];
+              const btn = document.querySelector(`button[data-seat="${seatNumber}"]`);
+              if (btn) {
+                  btn.classList.add("reserved");
+                  btn.disabled = true;
+              }
+          }
+      };
+    
+    document.addEventListener("click", (e) => {
+        if (e.target.classList.contains("seat")) {
+            const seatNumber = e.target.getAttribute("data-seat");
+            connection.invoke("ReserveSeat", parseInt(seatNumber), userId ,CategoryId);
+        }
+    });
+
+    connection.start();
+</script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .bus-container {
+            margin: 30px 0;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .bus {
+            width: 500px;
+            height: 300px;
+            background: linear-gradient(to bottom, #c1440e, #8c3311);
+            border-radius: 20px 60px 20px 20px;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+            .bus::before {
+                content: '';
+                position: absolute;
+                top: 30px;
+                left: 0;
+                width: 100%;
+                height: 180px;
+                background-color: #87CEEB;
+                border-top: 2px solid #5a8da1;
+                border-bottom: 2px solid #5a8da1;
+            }
+
+            .bus::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 40px;
+                background-color: #444;
+                border-top: 2px solid #222;
+            }
+
+        .windshield {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(to bottom, #a5d8ff, #7393B3);
+            border-radius: 10px 40px 10px 10px;
+            z-index: 2;
+        }
+
+        .door {
+            position: absolute;
+            bottom: 40px;
+            right: 30px;
+            width: 60px;
+            height: 140px;
+            background-color: #ff9800;
+            border: 2px solid #cc7a00;
+            z-index: 2;
+        }
+
+            .door::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 5px;
+                width: 50px;
+                height: 3px;
+                background-color: #cc7a00;
+            }
+
+        .seats-container {
+            position: absolute;
+            top: 80px;
+            left: 150px;
+            width: 300px;
+            height: 150px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 15px;
+            z-index: 2;
+        }
+
+        .seat {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+            .seat::after {
+                content: '';
+                position: absolute;
+                bottom: -10px;
+                left: 0;
+                width: 40px;
+                height: 10px;
+                background: linear-gradient(to bottom, #2c3e50, #1a2530);
+                border-radius: 0 0 5px 5px;
+            }
+
+            .seat:hover:not(.reserved) {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+            }
+
+            .seat.reserved {
+                background: linear-gradient(to bottom, #27ae60, #219653);
+                cursor: not-allowed;
+            }
+
+        .wheels {
+            display: flex;
+            position: absolute;
+            bottom: 0;
+            left: 80px;
+            z-index: 1;
+        }
+
+        .wheel {
+            width: 50px;
+            height: 50px;
+            background-color: #333;
+            border-radius: 50%;
+            margin: 0 100px;
+            position: relative;
+        }
+
+            .wheel::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 30px;
+                height: 30px;
+                background-color: #888;
+                border-radius: 50%;
+            }
+
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn-edit {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-back {
+            background-color: #7f8c8d;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .details {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        dt {
+            font-weight: bold;
+            width: 150px;
+        }
+
+        dd {
+            margin: 0;
+            flex: 1;
+        }
+    </style>
+
+
+
+
+@* <h1>Details</h1> *@
+
+@* <div> *@
+@*     <h4>Catigory</h4> *@
+@*     <hr /> *@
+@*     <dl class="row"> *@
+@*         <dt class = "col-sm-2"> *@
+@*             @Html.DisplayNameFor(model => model.NameCatigory) *@
+@*         </dt> *@
+@*         <dd class = "col-sm-10"> *@
+@*             @Html.DisplayFor(model => model.NameCatigory) *@
+@*         </dd> *@
+@*         <dt class = "col-sm-2"> *@
+@*             @Html.DisplayNameFor(model => model.bus) *@
+@*         </dt> *@
+@*         <dd class = "col-sm-10"> *@
+@*             @Html.DisplayFor(model => model.bus) *@
+@*         </dd> *@
+@*     </dl> *@
+@* </div> *@
+@* <div> *@
+@*     <div id="buss"> *@
+@*         @for (int i = 1; i <= @z; i++) *@
+@*         { *@
+@*             <button class="seat" data-seat="@i">@i</button> *@
+@*         } *@
+@*     </div> *@
+@* </div> *@
+@* <div> *@
+@*     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> | *@
+@*     <a asp-action="Index">Back to List</a> *@
+@* </div> *@
+@* <style> *@
+@*     #buss{ *@
+@*     border:2px solid black; *@
+@*     width:100px; *@
+@*     height:100px; *@
+@*     } *@
+@*     /* #btn{ */ *@
+@*     /*     position:absolute */ *@
+@*     /* } */ *@
+@* </style> *@
+@* <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script> *@
+@*             <script> *@
+@*     const connection = new signalR.HubConnectionBuilder() *@
+@*      .withUrl("/busHub") *@
+@*      .build(); *@
+
+@*     connection.on("SeatReserved", (seatNumber) => { *@
+@*         const btn = document.querySelector(`button[data-seat="${seatNumber}"]`); *@
+@*         if (btn) { *@
+@*             btn.classList.add("reserved"); *@
+@*             btn.disabled = true; *@
+@*             btn.style.color="green"; *@
+
+@*         } *@
+@*     }); *@
+
+@*    var q= document.querySelectorAll(".seat").forEach(btn => { *@
+@*         btn.addEventListener("click", () => { *@
+@*             var seatNumber = btn.getAttribute("data-seat"); *@
+@*             connection.invoke("ReserveSeat", parseInt(seatNumber)); *@
+@*         }); *@
+@*     }); *@
+@*     connection.start(); *@
+@*             </script> *@

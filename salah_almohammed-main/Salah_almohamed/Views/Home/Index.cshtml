@@ -1,0 +1,1024 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حجوزات السفر - رحلات برية، جوية وفنادق</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #BFB3A4;
+            --secondary-color: #A60303;
+            --accent-color-1: #A66D03;
+            --accent-color-2: #038C7F;
+            --text-color: #333;
+            --light-text: #fff;
+            --bg-light: #f9f9f9;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            color: var(--text-color);
+            background-color: var(--bg-light);
+            line-height: 1.6;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: var(--light-text);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            border-bottom: 1px solid #eee;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light-text);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .language-currency {
+            display: flex;
+            margin-left: 20px;
+        }
+
+            .language-currency select {
+                border: none;
+                background: transparent;
+                margin-left: 10px;
+                cursor: pointer;
+            }
+
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            padding: 15px 0;
+        }
+
+            .nav-menu a {
+                text-decoration: none;
+                color: var(--text-color);
+                margin: 0 15px;
+                font-weight: 500;
+                transition: var(--transition);
+                position: relative;
+            }
+
+                .nav-menu a:hover {
+                    color: var(--secondary-color);
+                }
+
+                .nav-menu a::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -5px;
+                    left: 0;
+                    width: 0;
+                    height: 2px;
+                    background-color: var(--secondary-color);
+                    transition: var(--transition);
+                }
+
+                .nav-menu a:hover::after {
+                    width: 100%;
+                }
+
+        /* Hero Section */
+        .hero {
+            height: 500px;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light-text);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .hero::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(45deg, var(--secondary-color) 0%, transparent 50%);
+                opacity: 0.3;
+                animation: gradientShift 8s ease-in-out infinite;
+            }
+
+        .hero-content {
+            max-width: 800px;
+            padding: 0 20px;
+            z-index: 2;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: textGlow 3s ease-in-out infinite alternate;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            animation: fadeIn 1.5s ease;
+        }
+
+        .hero-btn {
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: var(--light-text);
+            padding: 12px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: var(--transition);
+            border: 2px solid var(--secondary-color);
+            animation: pulse 2s infinite;
+        }
+
+            .hero-btn:hover {
+                background-color: transparent;
+                color: var(--light-text);
+                transform: translateY(-3px);
+            }
+
+        /* Tabs Section */
+        .tabs-section {
+            padding: 60px 5%;
+            background-color: var(--light-text);
+        }
+
+        .tabs-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tabs-header {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab-btn {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            color: var(--text-color);
+        }
+
+            .tab-btn.active {
+                color: var(--secondary-color);
+            }
+
+                .tab-btn.active::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -1px;
+                    left: 0;
+                    width: 100%;
+                    height: 3px;
+                    background-color: var(--secondary-color);
+                    animation: slideIn 0.3s ease;
+                }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+            .tab-content.active {
+                display: block;
+            }
+
+        .search-form {
+            background-color: var(--bg-light);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            animation: slideUp 0.5s ease;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+            padding: 0 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+            }
+
+            .form-group input, .form-group select {
+                width: 100%;
+                padding: 12px 15px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                transition: var(--transition);
+            }
+
+                .form-group input:focus, .form-group select:focus {
+                    border-color: var(--primary-color);
+                    outline: none;
+                    box-shadow: 0 0 0 2px rgba(191, 179, 164, 0.2);
+                    transform: translateY(-2px);
+                }
+
+        .search-btn {
+            background-color: var(--secondary-color);
+            color: var(--light-text);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .search-btn:hover {
+                background-color: var(--accent-color-1);
+                transform: translateY(-2px);
+            }
+
+            .search-btn::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 5px;
+                height: 5px;
+                background: rgba(255, 255, 255, 0.5);
+                opacity: 0;
+                border-radius: 100%;
+                transform: scale(1, 1) translate(-50%);
+                transform-origin: 50% 50%;
+            }
+
+            .search-btn:hover::after {
+                animation: ripple 1s ease-out;
+            }
+
+        /* Offers Section */
+        .offers-section {
+            padding: 60px 5%;
+            background-color: var(--bg-light);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            color: var(--secondary-color);
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+            .section-title::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 100px;
+                height: 3px;
+                background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+                animation: widthGrow 1.5s ease;
+            }
+
+        .offers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .offer-card {
+            background-color: var(--light-text);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+        }
+
+            .offer-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            }
+
+            .offer-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(to right, var(--accent-color-2), var(--accent-color-1));
+                transform: scaleX(0);
+                transition: transform 0.3s ease;
+            }
+
+            .offer-card:hover::before {
+                transform: scaleX(1);
+            }
+
+        .offer-img {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.5s ease;
+        }
+
+        .offer-card:hover .offer-img {
+            transform: scale(1.05);
+        }
+
+        .offer-content {
+            padding: 20px;
+        }
+
+        .offer-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+
+        .offer-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color-1);
+            margin-bottom: 15px;
+        }
+
+        .offer-btn {
+            display: inline-block;
+            background-color: var(--accent-color-2);
+            color: var(--light-text);
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .offer-btn:hover {
+                background-color: var(--primary-color);
+                transform: translateX(5px);
+            }
+
+        /* Footer */
+        footer {
+            background-color: #2c2c2c;
+            color: var(--light-text);
+            padding: 60px 5% 30px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+            .footer-column h3::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 50px;
+                height: 2px;
+                background-color: var(--accent-color-2);
+                animation: widthGrow 1s ease;
+            }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+            .footer-column ul li {
+                margin-bottom: 10px;
+                transition: var(--transition);
+            }
+
+                .footer-column ul li:hover {
+                    transform: translateX(5px);
+                }
+
+                .footer-column ul li a {
+                    color: #ccc;
+                    text-decoration: none;
+                    transition: var(--transition);
+                }
+
+                    .footer-column ul li a:hover {
+                        color: var(--primary-color);
+                    }
+
+        .social-links {
+            display: flex;
+            margin-top: 20px;
+        }
+
+            .social-links a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+                margin-left: 10px;
+                transition: var(--transition);
+                text-decoration: none;
+                color: white;
+            }
+
+                .social-links a:hover {
+                    background-color: var(--accent-color-2);
+                    transform: translateY(-3px);
+                }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Animations - Keyframes */
+        @@keyframes fadeInUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        @@keyframes fadeIn {
+            from
+
+        {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+
+        }
+
+        @@keyframes slideIn {
+            from
+
+        {
+            width: 0;
+        }
+
+        to {
+            width: 100%;
+        }
+
+        }
+
+        @@keyframes slideUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        @@keyframes pulse {
+            0%
+
+        {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(166, 3, 3, 0.7);
+        }
+
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(166, 3, 3, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(166, 3, 3, 0);
+        }
+
+        }
+
+        @@keyframes textGlow {
+            from
+
+        {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        to {
+            text-shadow: 2px 2px 20px rgba(255, 255, 255, 0.3), 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        }
+
+        @@keyframes gradientShift {
+            0%
+
+        {
+            transform: translateX(-100%);
+        }
+
+        50% {
+            transform: translateX(100%);
+        }
+
+        100% {
+            transform: translateX(-100%);
+        }
+
+        }
+
+        @@keyframes ripple {
+            0%
+
+        {
+            transform: scale(0, 0);
+            opacity: 0.5;
+        }
+
+        100% {
+            transform: scale(20, 20);
+            opacity: 0;
+        }
+
+        }
+
+        @@keyframes widthGrow {
+            from
+
+        {
+            width: 0;
+        }
+
+        to {
+            width: 100px;
+        }
+
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @@keyframes spin {
+            to
+
+        {
+            transform: rotate(360deg);
+        }
+
+        }
+
+        /* Responsive Design */
+        @@media (max-width: 768px) {
+            .header-top
+
+        {
+            flex-direction: column;
+            padding: 15px;
+        }
+
+        .logo {
+            margin-bottom: 15px;
+        }
+
+        .nav-menu {
+            flex-wrap: wrap;
+        }
+
+            .nav-menu a {
+                margin: 5px 10px;
+            }
+
+        .hero h1 {
+            font-size: 2rem;
+        }
+
+        .tabs-header {
+            flex-direction: column;
+        }
+
+        .tab-btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        .form-row {
+            flex-direction: column;
+        }
+
+        .form-group {
+            min-width: 100%;
+        }
+
+        .hero-btn {
+            animation: none;
+        }
+
+        }</style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-top">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-plane"></i></div>
+                سفريات
+            </div>
+            <div class="header-controls">
+                <div class="language-currency">
+                    <select id="currency">
+                        <option value="SAR">SAR</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                    <select id="language">
+                        <option value="ar">العربية</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <a href="#">الرئيسية</a>
+            <a href="#">رحلات الطيران</a>
+            <a href="#">رحلات الحافلات</a>
+            <a href="#">الفنادق</a>
+            <a href="#">عروض خاصة</a>
+            <a href="#">اتصل بنا</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>استمتع بأفضل عروض السفر</h1>
+            <p>احجز رحلاتك بسهولة وأمان مع أفضل العروض على الطيران، الحافلات والفنادق</p>
+            <a href="#" class="hero-btn">استكشف العروض</a>
+        </div>
+    </section>
+
+    <!-- Tabs Section -->
+    <section class="tabs-section">
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="land">رحلات برية</button>
+                <button class="tab-btn" data-tab="flight">رحلات جوية</button>
+                <button class="tab-btn" data-tab="hotels">فنادق</button>
+            </div>
+
+            <!-- Land Trips Tab -->
+            <div class="tab-content active" id="land-tab">
+                <div class="search-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="from-land">من</label>
+                            <input type="text" id="from-land" placeholder="المدينة أو المحطة">
+                        </div>
+                        <div class="form-group">
+                            <label for="to-land">إلى</label>
+                            <input type="text" id="to-land" placeholder="المدينة أو المحطة">
+                        </div>
+                        <div class="form-group">
+                            <label for="departure-land">تاريخ المغادرة</label>
+                            <input type="date" id="departure-land">
+                        </div>
+                        <div class="form-group">
+                            <label for="return-land">تاريخ العودة (اختياري)</label>
+                            <input type="date" id="return-land">
+                        </div>
+                    </div>
+                    <button class="search-btn">ابحث عن رحلات</button>
+                </div>
+            </div>
+
+            <!-- Flight Trips Tab -->
+            <div class="tab-content" id="flight-tab">
+                <div class="search-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="from-flight">من</label>
+                            <input type="text" id="from-flight" placeholder="المدينة أو المطار">
+                        </div>
+                        <div class="form-group">
+                            <label for="to-flight">إلى</label>
+                            <input type="text" id="to-flight" placeholder="المدينة أو المطار">
+                        </div>
+                        <div class="form-group">
+                            <label for="departure-flight">تاريخ المغادرة</label>
+                            <input type="date" id="departure-flight">
+                        </div>
+                        <div class="form-group">
+                            <label for="return-flight">تاريخ العودة (اختياري)</label>
+                            <input type="date" id="return-flight">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="passengers">عدد المسافرين</label>
+                            <select id="passengers">
+                                <option value="1">1 مسافر</option>
+                                <option value="2">2 مسافرين</option>
+                                <option value="3">3 مسافرين</option>
+                                <option value="4">4 مسافرين</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="class">فئة المقعد</label>
+                            <select id="class">
+                                <option value="economy">السياحية</option>
+                                <option value="business">رجال الأعمال</option>
+                                <option value="first">الأولى</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="search-btn">ابحث عن رحلات</button>
+                </div>
+            </div>
+
+            <!-- Hotels Tab -->
+            <div class="tab-content" id="hotels-tab">
+                <div class="search-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="destination">الوجهة</label>
+                            <input type="text" id="destination" placeholder="المدينة أو الفندق">
+                        </div>
+                        <div class="form-group">
+                            <label for="check-in">تاريخ الوصول</label>
+                            <input type="date" id="check-in">
+                        </div>
+                        <div class="form-group">
+                            <label for="check-out">تاريخ المغادرة</label>
+                            <input type="date" id="check-out">
+                        </div>
+                        <div class="form-group">
+                            <label for="rooms">الغرف</label>
+                            <select id="rooms">
+                                <option value="1">1 غرفة</option>
+                                <option value="2">2 غرفة</option>
+                                <option value="3">3 غرفة</option>
+                                <option value="4">4 غرفة</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="adults">البالغين</label>
+                            <select id="adults">
+                                <option value="1">1 بالغ</option>
+                                <option value="2">2 بالغين</option>
+                                <option value="3">3 بالغين</option>
+                                <option value="4">4 بالغين</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="children">الأطفال</label>
+                            <select id="children">
+                                <option value="0">0 أطفال</option>
+                                <option value="1">1 طفل</option>
+                                <option value="2">2 أطفال</option>
+                                <option value="3">3 أطفال</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="search-btn">ابحث عن فنادق</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Special Offers Section -->
+    <section class="offers-section">
+        <h2 class="section-title">عروض خاصة</h2>
+        <div class="offers-grid">
+            <div class="offer-card">
+                <div class="offer-img" style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');"></div>
+                <div class="offer-content">
+                    <h3 class="offer-title">رحلة إلى إسطنبول</h3>
+                    <p class="offer-desc">استمتع برحلة مميزة إلى إسطنبول مع إقامة في فندق 5 نجوم</p>
+                    <div class="offer-price">1,499 ريال</div>
+                    <a href="#" class="offer-btn">احجز الآن</a>
+                </div>
+            </div>
+            <div class="offer-card">
+                <div class="offer-img" style="background-image: url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');"></div>
+                <div class="offer-content">
+                    <h3 class="offer-title">عطلة في دبي</h3>
+                    <p class="offer-desc">عروض خاصة على الفنادق والجولات السياحية في دبي</p>
+                    <div class="offer-price">899 ريال</div>
+                    <a href="#" class="offer-btn">احجز الآن</a>
+                </div>
+            </div>
+            <div class="offer-card">
+                <div class="offer-img" style="background-image: url('https://images.unsplash.com/photo-1539667547529-84b2b9d3b9e1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');"></div>
+                <div class="offer-content">
+                    <h3 class="offer-title">رحلات الحافلات الداخلية</h3>
+                    <p class="offer-desc">خصم 20% على جميع رحلات الحافلات الداخلية</p>
+                    <div class="offer-price">ابتداءً من 49 ريال</div>
+                    <a href="#" class="offer-btn">احجز الآن</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>عن الشركة</h3>
+                <p>نقدم خدمات حجوزات السفر منذ عام 2010، نسعى دائمًا لتوفير أفضل الخدمات لعملائنا الكرام.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>روابط سريعة</h3>
+                <ul>
+                    <li><a href="#">الرئيسية</a></li>
+                    <li><a href="#">رحلات الطيران</a></li>
+                    <li><a href="#">رحلات الحافلات</a></li>
+                    <li><a href="#">الفنادق</a></li>
+                    <li><a href="#">عروض خاصة</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>معلومات الاتصال</h3>
+                <ul>
+                    <li><i class="fas fa-phone"></i> 0123456789</li>
+                    <li><i class="fas fa-envelope"></i> info@example.com</li>
+                    <li><i class="fas fa-map-marker-alt"></i> مدينة الرياض، المملكة العربية السعودية</li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>النشرة البريدية</h3>
+                <p>اشترك في نشرتنا البريدية لتصلك أحدث العروض والتخفيضات</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="بريدك الإلكتروني" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none;">
+                    <button type="submit" style="background-color: var(--accent-color-2); color: white; border: none; padding: 10px 20px; border-radius: 5px; width: 100%; cursor: pointer;">اشترك</button>
+                </form>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2023 جميع الحقوق محفوظة لشركة سفريات</p>
+        </div>
+    </footer>
+
+    <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all buttons and contents
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+
+                    // Add active class to clicked button
+                    btn.classList.add('active');
+
+                    // Show corresponding content
+                    const tabId = btn.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+
+            // Set current date as default for date inputs
+            const today = new Date().toISOString().split('T')[0];
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => {
+                input.value = today;
+                input.min = today;
+            });
+
+            // Add loading animation to search buttons
+            const searchBtns = document.querySelectorAll('.search-btn');
+            searchBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<span class="loading"></span> جاري البحث...';
+
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 2000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

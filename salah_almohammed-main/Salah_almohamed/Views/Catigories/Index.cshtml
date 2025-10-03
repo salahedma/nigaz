@@ -1,0 +1,52 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Models.Model
+@model IEnumerable<Catigory>
+@inject UserManager<User> userManager
+@* @inject IdentityUserRole<User> userRole *@
+
+
+@{
+    ViewData["Title"] = "Index";
+    var currentUser = await userManager.GetUserAsync(User);
+    var userId = await userManager.GetUserIdAsync(currentUser);
+    var role = await userManager.IsInRoleAsync(currentUser , "Admin");
+}
+
+<h1>Index</h1>
+@if (role){
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.NameCatigory)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Seats)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.NameCatigory)
+            </td>
+            <td>
+                    @Html.DisplayFor(modelItem => item.Seats)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">اوتيلات</a> |
+               
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
